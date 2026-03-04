@@ -49,7 +49,7 @@ const assembleHtmlRoute = (link) => ({
     }
 
     // Render from CDN.
-    const clientVersion = config('CLIENT_VERSION');
+    const clientVersion = process.env.CLIENT_VERSION || config('CLIENT_VERSION');
     if (clientVersion) {
       return h.response(ejs.render(template, {
         config: cfg,
