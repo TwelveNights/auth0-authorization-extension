@@ -90,8 +90,9 @@ module.exports = {
     ]
   },
   resolve: {
-    // Prefer ESM builds ('module') over CJS ('main') to enable tree shaking
-    mainFields: [ 'module', 'main' ],
+    // Use CJS-first resolution to avoid ESM default export interop issues
+    // (e.g. hexoid's ESM build uses 'export default' which breaks CJS consumers)
+    mainFields: [ 'main', 'module' ],
     extensions: [ '.js', '.jsx', '.json' ],
     modules: [ 'node_modules' ]
   }
