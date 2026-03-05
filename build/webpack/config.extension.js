@@ -9,16 +9,13 @@ const project = require('../../package.json');
 const version = process.env.EXTENSION_VERSION || project.version;
 
 const extensionConfig = project['auth0-extension'] || {};
-const settings = extensionConfig.settings || {};
-// Define each setting as an individual process.env.KEY replacement so that
-// the runtime process.env object is preserved for environment variables
-// injected by the webtask context (AUTH0_DOMAIN, credentials, etc.)
-const defines = {
-  'process.env.NODE_ENV': JSON.stringify('production'),
-  'process.env.CLIENT_VERSION': JSON.stringify(version)
-};
-Object.keys(settings).forEach((key) => {
-  defines[`process.env.${key}`] = JSON.stringify(settings[key]);
+const settings = Object.assign({}, extensionConfig.settings || {}, {
+  NODE_ENV: 'production',
+  CLIENT_VERSION: version
+});
+
+Object.keys(settings).forEach((k) => {
+  settings[k] = JSON.stringify(settings[k]);
 });
 
 module.exports = {
@@ -48,7 +45,7 @@ module.exports = {
     ]
   },
   plugins: [
-    new webpack.DefinePlugin(defines),
+    new webpack.DefinePlugin({ 'process.env': settings }),
     new webpack.BannerPlugin({
       banner: '"use strict";',
       raw: true

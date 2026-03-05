@@ -1,15 +1,9 @@
-import fs from 'fs';
-import { promisify } from 'util';
-
 import ejs from 'ejs';
-import path from 'path';
 
 import { getBasePath, getBaseUrl } from '../lib/tools/auth0-extension-hapi-tools-url-helpers';
 
 import config from '../lib/config';
 import template from '../views/index';
-
-const readFile = promisify(fs.readFile);
 
 const assembleHtmlRoute = (link) => ({
   method: 'GET',
@@ -25,7 +19,7 @@ const assembleHtmlRoute = (link) => ({
       BASE_URL: getBaseUrl(req),
       API_BASE: getBaseUrl(req),
       BASE_PATH: getBasePath(req),
-      EXTENSION_VERSION: '2.13.0',
+      EXTENSION_VERSION: process.env.CLIENT_VERSION,
       SEARCH_ENGINE: (
         (config('AUTH0_RTA').replace('https://', '') === 'auth0.auth0.com') ||
         config('IS_LAYER0_TEST_SPACE')
@@ -49,42 +43,10 @@ const assembleHtmlRoute = (link) => ({
     }
 
     // Render from CDN.
-    const clientVersion = process.env.CLIENT_VERSION || config('CLIENT_VERSION');
-    if (clientVersion) {
-      return h.response(ejs.render(template, {
-        config: cfg,
-        assets: { version: clientVersion }
-      }));
-    }
-
-    // Render locally.
-    const data = await readFile(path.join(__dirname, '../../dist/manifest.json'), 'utf8');
-    const locals = {
+    return h.response(ejs.render(template, {
       config: cfg,
-      assets: {
-        app: '/app/bundle.js'
-      }
-    };
-
-
-    if (data) {
-      locals.assets = JSON.parse(data);
-
-      if (locals.assets.app) {
-        locals.assets.app = `/app/${locals.assets.app}`;
-      }
-
-      if (locals.assets.vendors) {
-        locals.assets.vendors = `/app/${locals.assets.vendors}`;
-      }
-
-      if (locals.assets.style) {
-        locals.assets.style = `/app/${locals.assets.style}`;
-      }
-    }
-
-    // Render the HTML page.
-    return h.response(ejs.render(template, locals));
+      assets: { version: process.env.CLIENT_VERSION }
+    }));
   }
 });
 
@@ -113,4 +75,3 @@ export const htmlPlugin = {
   register,
   name: 'html'
 };
-
